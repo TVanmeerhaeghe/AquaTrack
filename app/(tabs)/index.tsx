@@ -5,12 +5,12 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
 } from "react-native";
-import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../constants/theme";
+import AddAquariumModal from "../../components/AddAquariumModal";
 
 type Aquarium = {
   id: string;
@@ -33,9 +33,16 @@ const typeColors = {
   brackish: "#4A7D6F",
 };
 
+const typeEmojis = {
+  freshwater: "🌿",
+  saltwater: "🌊",
+  brackish: "🦀",
+};
+
 export default function Home() {
   const [aquariums, setAquariums] = useState<Aquarium[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchAquariums();
@@ -55,7 +62,7 @@ export default function Home() {
     return (
       <TouchableOpacity style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardEmoji}>🐟</Text>
+          <Text style={styles.cardEmoji}>{typeEmojis[item.type]}</Text>
           <View
             style={[
               styles.badge,
@@ -68,7 +75,7 @@ export default function Home() {
           </View>
         </View>
         <Text style={styles.cardName}>{item.name}</Text>
-        <Text style={styles.cardVolume}>{item.volume}L</Text>
+        <Text style={styles.cardVolume}>{item.volume} L</Text>
         {item.description && (
           <Text style={styles.cardDesc} numberOfLines={2}>
             {item.description}
@@ -79,7 +86,7 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Mes aquariums</Text>
@@ -87,7 +94,10 @@ export default function Home() {
             {aquariums.length} bac{aquariums.length > 1 ? "s" : ""}
           </Text>
         </View>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => setShowModal(true)}
+        >
           <Text style={styles.addButtonText}>+ Ajouter</Text>
         </TouchableOpacity>
       </View>
@@ -104,7 +114,10 @@ export default function Home() {
           <Text style={styles.emptyText}>
             Ajoutez votre premier bac pour commencer
           </Text>
-          <TouchableOpacity style={styles.emptyButton}>
+          <TouchableOpacity
+            style={styles.emptyButton}
+            onPress={() => setShowModal(true)}
+          >
             <Text style={styles.emptyButtonText}>Créer un aquarium</Text>
           </TouchableOpacity>
         </View>
@@ -117,6 +130,12 @@ export default function Home() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <AddAquariumModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        onCreated={fetchAquariums}
+      />
     </SafeAreaView>
   );
 }
@@ -131,7 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
   },
   headerTitle: {
