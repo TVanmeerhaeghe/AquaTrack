@@ -14,6 +14,8 @@ import { supabase } from "../../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../../constants/theme";
 import AddParameterModal from "../../../components/AddParameterModal";
 import AddSpeciesModal from "../../../components/AddSpeciesModal";
+import SwipeableSpeciesRow from "../../../components/SwipeableSpeciesRow";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 type Aquarium = {
   id: string;
@@ -122,122 +124,133 @@ export default function AquariumDetail() {
   const lastParam = parameters[0];
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Retour</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleDelete}>
-          <Text style={styles.deleteText}>Supprimer</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
-          <Text style={styles.heroEmoji}>{typeEmojis[aquarium.type]}</Text>
-          <Text style={styles.heroName}>{aquarium.name}</Text>
-          <View style={styles.heroMeta}>
-            <Text style={styles.heroMetaText}>{aquarium.volume} L</Text>
-            <Text style={styles.heroMetaDot}>·</Text>
-            <Text style={styles.heroMetaText}>{typeLabels[aquarium.type]}</Text>
-          </View>
-          {aquarium.description && (
-            <Text style={styles.heroDesc}>{aquarium.description}</Text>
-          )}
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
+            <Text style={styles.backText}>← Retour</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleDelete}>
+            <Text style={styles.deleteText}>Supprimer</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Derniers paramètres</Text>
-            <TouchableOpacity
-              style={styles.sectionBtn}
-              onPress={() => setShowParamModal(true)}
-            >
-              <Text style={styles.sectionBtnText}>+ Mesure</Text>
-            </TouchableOpacity>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.hero}>
+            <Text style={styles.heroEmoji}>{typeEmojis[aquarium.type]}</Text>
+            <Text style={styles.heroName}>{aquarium.name}</Text>
+            <View style={styles.heroMeta}>
+              <Text style={styles.heroMetaText}>{aquarium.volume} L</Text>
+              <Text style={styles.heroMetaDot}>·</Text>
+              <Text style={styles.heroMetaText}>
+                {typeLabels[aquarium.type]}
+              </Text>
+            </View>
+            {aquarium.description && (
+              <Text style={styles.heroDesc}>{aquarium.description}</Text>
+            )}
           </View>
 
-          {lastParam ? (
-            <View style={styles.paramsGrid}>
-              {[
-                { label: "pH", value: lastParam.ph, unit: "" },
-                { label: "Temp.", value: lastParam.temperature, unit: "°C" },
-                { label: "NO3", value: lastParam.nitrates, unit: "mg/L" },
-                { label: "NO2", value: lastParam.nitrites, unit: "mg/L" },
-                { label: "GH", value: lastParam.gh, unit: "°dH" },
-                { label: "KH", value: lastParam.kh, unit: "°dH" },
-              ].map((p) => (
-                <View key={p.label} style={styles.paramCard}>
-                  <Text style={styles.paramLabel}>{p.label}</Text>
-                  <Text style={styles.paramValue}>
-                    {p.value !== null ? `${p.value}${p.unit}` : "—"}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyCardText}>
-                Aucune mesure enregistrée
-              </Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Derniers paramètres</Text>
               <TouchableOpacity
-                style={styles.emptyCardBtn}
+                style={styles.sectionBtn}
                 onPress={() => setShowParamModal(true)}
               >
-                <Text style={styles.emptyCardBtnText}>Ajouter une mesure</Text>
+                <Text style={styles.sectionBtnText}>+ Mesure</Text>
               </TouchableOpacity>
             </View>
-          )}
-        </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Espèces ({species.length})</Text>
-            <TouchableOpacity
-              style={styles.sectionBtn}
-              onPress={() => setShowSpeciesModal(true)}
-            >
-              <Text style={styles.sectionBtnText}>+ Espèce</Text>
-            </TouchableOpacity>
+            {lastParam ? (
+              <View style={styles.paramsGrid}>
+                {[
+                  { label: "pH", value: lastParam.ph, unit: "" },
+                  { label: "Temp.", value: lastParam.temperature, unit: "°C" },
+                  { label: "NO3", value: lastParam.nitrates, unit: "mg/L" },
+                  { label: "NO2", value: lastParam.nitrites, unit: "mg/L" },
+                  { label: "GH", value: lastParam.gh, unit: "°dH" },
+                  { label: "KH", value: lastParam.kh, unit: "°dH" },
+                ].map((p) => (
+                  <View key={p.label} style={styles.paramCard}>
+                    <Text style={styles.paramLabel}>{p.label}</Text>
+                    <Text style={styles.paramValue}>
+                      {p.value !== null ? `${p.value}${p.unit}` : "—"}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>
+                  Aucune mesure enregistrée
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyCardBtn}
+                  onPress={() => setShowParamModal(true)}
+                >
+                  <Text style={styles.emptyCardBtnText}>
+                    Ajouter une mesure
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
-          {species.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyCardText}>
-                Aucune espèce enregistrée
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Espèces ({species.length})
               </Text>
+              <TouchableOpacity
+                style={styles.sectionBtn}
+                onPress={() => setShowSpeciesModal(true)}
+              >
+                <Text style={styles.sectionBtnText}>+ Espèce</Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            <View style={styles.speciesList}>
-              {species.map((s) => (
-                <View key={s.id} style={styles.speciesRow}>
-                  <Text style={styles.speciesEmoji}>
-                    {speciesEmojis[s.type]}
-                  </Text>
-                  <Text style={styles.speciesName}>{s.name}</Text>
-                  <Text style={styles.speciesQty}>x{s.quantity}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-      </ScrollView>
 
-      <AddParameterModal
-        visible={showParamModal}
-        aquariumId={id}
-        onClose={() => setShowParamModal(false)}
-        onSaved={fetchAll}
-      />
+            {species.length === 0 ? (
+              <View style={styles.emptyCard}>
+                <Text style={styles.emptyCardText}>
+                  Aucune espèce enregistrée
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.speciesList}>
+                {species.map((s, index) => (
+                  <SwipeableSpeciesRow
+                    key={s.id}
+                    species={s}
+                    onDeleted={fetchAll}
+                    onPress={() => {}}
+                    isLast={index === species.length - 1}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </ScrollView>
 
-      <AddSpeciesModal
-        visible={showSpeciesModal}
-        aquariumId={id}
-        aquariumType={aquarium.type}
-        onClose={() => setShowSpeciesModal(false)}
-        onAdded={fetchAll}
-      />
-    </SafeAreaView>
+        <AddParameterModal
+          visible={showParamModal}
+          aquariumId={id}
+          onClose={() => setShowParamModal(false)}
+          onSaved={fetchAll}
+        />
+
+        <AddSpeciesModal
+          visible={showSpeciesModal}
+          aquariumId={id}
+          aquariumType={aquarium.type}
+          onClose={() => setShowSpeciesModal(false)}
+          onAdded={fetchAll}
+        />
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
