@@ -13,6 +13,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../../constants/theme";
 import AddParameterModal from "../../../components/AddParameterModal";
+import AddSpeciesModal from "../../../components/AddSpeciesModal";
 
 type Aquarium = {
   id: string;
@@ -66,6 +67,7 @@ export default function AquariumDetail() {
   const [species, setSpecies] = useState<Species[]>([]);
   const [loading, setLoading] = useState(true);
   const [showParamModal, setShowParamModal] = useState(false);
+  const [showSpeciesModal, setShowSpeciesModal] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -191,7 +193,10 @@ export default function AquariumDetail() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Espèces ({species.length})</Text>
-            <TouchableOpacity style={styles.sectionBtn}>
+            <TouchableOpacity
+              style={styles.sectionBtn}
+              onPress={() => setShowSpeciesModal(true)}
+            >
               <Text style={styles.sectionBtnText}>+ Espèce</Text>
             </TouchableOpacity>
           </View>
@@ -223,6 +228,14 @@ export default function AquariumDetail() {
         aquariumId={id}
         onClose={() => setShowParamModal(false)}
         onSaved={fetchAll}
+      />
+
+      <AddSpeciesModal
+        visible={showSpeciesModal}
+        aquariumId={id}
+        aquariumType={aquarium.type}
+        onClose={() => setShowSpeciesModal(false)}
+        onAdded={fetchAll}
       />
     </SafeAreaView>
   );
