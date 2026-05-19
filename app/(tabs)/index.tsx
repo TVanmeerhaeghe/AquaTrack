@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../constants/theme";
 import AddAquariumModal from "../../components/AddAquariumModal";
+import { router } from "expo-router";
 
 type Aquarium = {
   id: string;
@@ -60,7 +61,10 @@ export default function Home() {
 
   function renderAquarium({ item }: { item: Aquarium }) {
     return (
-      <TouchableOpacity style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => router.push(`/(tabs)/aquarium/${item.id}`)}
+      >
         <View style={styles.cardHeader}>
           <Text style={styles.cardEmoji}>{typeEmojis[item.type]}</Text>
           <View

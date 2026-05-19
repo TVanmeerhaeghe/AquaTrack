@@ -31,6 +31,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <TabIcon emoji="🐟" />,
         }}
       />
+      <Tabs.Screen name="aquarium/[id]" options={{ href: null }} />
       <Tabs.Screen
         name="parameters"
         options={{
