@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../../../constants/theme";
+import AddParameterModal from "../../../components/AddParameterModal";
 
 type Aquarium = {
   id: string;
@@ -64,6 +65,7 @@ export default function AquariumDetail() {
   const [parameters, setParameters] = useState<WaterParameter[]>([]);
   const [species, setSpecies] = useState<Species[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showParamModal, setShowParamModal] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -145,7 +147,10 @@ export default function AquariumDetail() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Derniers paramètres</Text>
-            <TouchableOpacity style={styles.sectionBtn}>
+            <TouchableOpacity
+              style={styles.sectionBtn}
+              onPress={() => setShowParamModal(true)}
+            >
               <Text style={styles.sectionBtnText}>+ Mesure</Text>
             </TouchableOpacity>
           </View>
@@ -173,7 +178,10 @@ export default function AquariumDetail() {
               <Text style={styles.emptyCardText}>
                 Aucune mesure enregistrée
               </Text>
-              <TouchableOpacity style={styles.emptyCardBtn}>
+              <TouchableOpacity
+                style={styles.emptyCardBtn}
+                onPress={() => setShowParamModal(true)}
+              >
                 <Text style={styles.emptyCardBtnText}>Ajouter une mesure</Text>
               </TouchableOpacity>
             </View>
@@ -209,6 +217,13 @@ export default function AquariumDetail() {
           )}
         </View>
       </ScrollView>
+
+      <AddParameterModal
+        visible={showParamModal}
+        aquariumId={id}
+        onClose={() => setShowParamModal(false)}
+        onSaved={fetchAll}
+      />
     </SafeAreaView>
   );
 }
