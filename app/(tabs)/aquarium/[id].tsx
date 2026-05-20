@@ -17,6 +17,7 @@ import AddSpeciesModal from "../../../components/AddSpeciesModal";
 import SwipeableSpeciesRow from "../../../components/SwipeableSpeciesRow";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import CompatibilityCard from "../../../components/CompatibilityCard";
+import NotificationsModal from "../../../components/NotificationsModal";
 
 type Aquarium = {
   id: string;
@@ -72,6 +73,7 @@ export default function AquariumDetail() {
   const [loading, setLoading] = useState(true);
   const [showParamModal, setShowParamModal] = useState(false);
   const [showSpeciesModal, setShowSpeciesModal] = useState(false);
+  const [showNotifModal, setShowNotifModal] = useState(false);
 
   useEffect(() => {
     fetchAll();
@@ -155,6 +157,9 @@ export default function AquariumDetail() {
             style={styles.backBtn}
           >
             <Text style={styles.backText}>← Retour</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowNotifModal(true)}>
+            <Text style={styles.notifBtn}>🔔</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={handleDelete}>
             <Text style={styles.deleteText}>Supprimer</Text>
@@ -260,6 +265,12 @@ export default function AquariumDetail() {
           </View>
         </ScrollView>
 
+        <NotificationsModal
+          visible={showNotifModal}
+          aquariumName={aquarium?.name || ""}
+          onClose={() => setShowNotifModal(false)}
+        />
+
         <AddParameterModal
           visible={showParamModal}
           aquariumId={id}
@@ -296,6 +307,7 @@ const styles = StyleSheet.create({
   },
   backBtn: {},
   backText: { fontSize: fontSize.md, color: colors.accent, fontWeight: "500" },
+  notifBtn: { fontSize: fontSize.lg, color: colors.accent },
   deleteText: { fontSize: fontSize.sm, color: colors.error },
   hero: {
     alignItems: "center",
