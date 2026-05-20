@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { colors, spacing, radius, fontSize } from "../constants/theme";
+import AddCustomSpeciesModal from "./AddCustomSpeciesModal";
 
 type FishSpecies = {
   id: number;
@@ -107,6 +108,7 @@ export default function AddSpeciesModal({
   const [selected, setSelected] = useState<FishSpecies | null>(null);
   const [quantity, setQuantity] = useState("1");
   const [saving, setSaving] = useState(false);
+  const [showCustomModal, setShowCustomModal] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -314,8 +316,16 @@ export default function AddSpeciesModal({
                   <View style={styles.empty}>
                     <Text style={styles.emptyText}>Aucune espèce trouvée</Text>
                     <Text style={styles.emptyHint}>
-                      Essayez un autre nom ou ajoutez une espèce custom
+                      Cette espèce n'est pas encore dans notre base
                     </Text>
+                    <TouchableOpacity
+                      style={styles.customBtn}
+                      onPress={() => setShowCustomModal(true)}
+                    >
+                      <Text style={styles.customBtnText}>
+                        + Ajouter une espèce
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 }
                 renderItem={({ item }) => (
@@ -367,6 +377,20 @@ export default function AddSpeciesModal({
             )}
           </>
         )}
+        <AddCustomSpeciesModal
+          visible={showCustomModal}
+          aquariumId={aquariumId}
+          aquariumType={aquariumType}
+          initialName={search}
+          onClose={() => setShowCustomModal(false)}
+          onAdded={() => {
+            setShowCustomModal(false);
+            setTimeout(() => {
+              onAdded();
+              onClose();
+            }, 300);
+          }}
+        />
       </SafeAreaView>
     </Modal>
   );
@@ -539,5 +563,17 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.accent,
     fontWeight: "500",
+  },
+  customBtn: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    marginTop: spacing.md,
+  },
+  customBtnText: {
+    color: colors.text,
+    fontSize: fontSize.md,
+    fontWeight: "600",
   },
 });
