@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { colors } from "../../constants/theme";
+import { colors, spacing } from "../../constants/theme";
 import { Text } from "react-native";
 
 export default function TabsLayout() {
@@ -13,6 +13,7 @@ export default function TabsLayout() {
           borderTopWidth: 1,
           paddingBottom: 8,
           paddingTop: 8,
+          paddingHorizontal: spacing.md,
           height: 64,
         },
         tabBarActiveTintColor: colors.accent,

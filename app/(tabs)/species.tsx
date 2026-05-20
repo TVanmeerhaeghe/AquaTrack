@@ -27,6 +27,7 @@ type Species = {
   type: string;
   quantity: number;
   aquarium_id: string;
+  image_url: string | null;
 };
 
 type FishSpeciesDetail = {
@@ -354,7 +355,6 @@ function SpeciesDetailModal({
   );
 }
 
-// ============ VUE MES BACS ============
 function MyAquariumsView() {
   const [aquariums, setAquariums] = useState<Aquarium[]>([]);
   const [selectedAquarium, setSelectedAquarium] = useState<string | null>(null);
@@ -363,11 +363,11 @@ function MyAquariumsView() {
   const [selectedDetail, setSelectedDetail] =
     useState<FishSpeciesDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchAquariums();
   }, []);
-
   useEffect(() => {
     if (selectedAquarium) fetchSpecies();
   }, [selectedAquarium]);
@@ -391,7 +391,26 @@ function MyAquariumsView() {
       .select("*")
       .eq("aquarium_id", selectedAquarium)
       .order("name");
-    setSpecies(data || []);
+
+    if (data && data.length > 0) {
+      const names = data.map((s) => s.name);
+      const { data: fishData } = await supabase
+        .from("fish_species")
+        .select("common_name, image_url")
+        .in("common_name", names);
+
+      const imageMap: Record<string, string | null> = {};
+      (fishData || []).forEach((f) => {
+        imageMap[f.common_name] = f.image_url;
+      });
+
+      setSpecies(
+        data.map((s) => ({ ...s, image_url: imageMap[s.name] || null })),
+      );
+    } else {
+      setSpecies([]);
+    }
+    setImgErrors({});
     setLoading(false);
   }
 
@@ -480,17 +499,34 @@ function MyAquariumsView() {
                     ({items.length})
                   </Text>
                   <View style={styles.speciesList}>
-                    {items.map((s) => (
+                    {items.map((s, index) => (
                       <TouchableOpacity
                         key={s.id}
-                        style={styles.speciesRow}
+                        style={[
+                          styles.speciesRow,
+                          index < items.length - 1 && styles.speciesRowBorder,
+                        ]}
                         onPress={() => fetchSpeciesDetail(s.name)}
                       >
-                        <View style={styles.speciesEmojiBadge}>
-                          <Text style={{ fontSize: 22 }}>
-                            {categoryEmojis[s.type] || "🐟"}
-                          </Text>
-                        </View>
+                        {s.image_url && !imgErrors[s.id] ? (
+                          <Image
+                            source={{ uri: s.image_url }}
+                            style={styles.speciesThumbnail}
+                            resizeMode="cover"
+                            onError={() =>
+                              setImgErrors((prev) => ({
+                                ...prev,
+                                [s.id]: true,
+                              }))
+                            }
+                          />
+                        ) : (
+                          <View style={styles.speciesEmojiBadge}>
+                            <Text style={{ fontSize: 22 }}>
+                              {categoryEmojis[s.type] || "🐟"}
+                            </Text>
+                          </View>
+                        )}
                         <View style={styles.speciesInfo}>
                           <Text style={styles.speciesName}>{s.name}</Text>
                           <Text style={styles.speciesQty}>
@@ -522,7 +558,6 @@ function MyAquariumsView() {
   );
 }
 
-// Ajoute ce composant AVANT EncyclopediaView
 function EncyclopediaCard({
   item,
   onPress,
@@ -612,12 +647,10 @@ function EncyclopediaView() {
       .select("*")
       .order("common_name")
       .limit(50);
-
     if (search.trim()) req = req.ilike("common_name", `%${search}%`);
     if (filterType) req = req.eq("category", filterType);
     if (filterWater) req = req.eq("water_type", filterWater);
     if (filterDifficulty) req = req.eq("difficulty", filterDifficulty);
-
     const { data } = await req;
     setResults(data || []);
     setLoading(false);
@@ -672,11 +705,26 @@ function EncyclopediaView() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.filtersScroll}
+        style={{ maxHeight: 80, flexGrow: 0, marginBottom: spacing.sm }}
       >
-        <View style={styles.filtersRow}>
+        <View
+          style={{
+            flexDirection: "row",
+            paddingHorizontal: spacing.lg,
+            gap: spacing.xs,
+            alignItems: "center",
+            height: 80,
+          }}
+        >
           {filters.map((f) => (
-            <View key={f.label} style={styles.filterGroup}>
+            <View
+              key={f.label}
+              style={{
+                flexDirection: "row",
+                gap: spacing.xs,
+                marginRight: spacing.sm,
+              }}
+            >
               {f.options.map((opt) => (
                 <TouchableOpacity
                   key={opt.key}
@@ -849,10 +897,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   chipTextActive: { color: colors.accent, fontWeight: "700" },
-  searchContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
+  searchContainer: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   searchInput: {
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -863,26 +908,9 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     color: colors.text,
   },
-  filtersScroll: {
-    marginBottom: spacing.sm,
-    maxHeight: 80,
-    flexGrow: 0,
-  },
-  filtersRow: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.lg,
-    gap: spacing.xs,
-    alignItems: "center",
-    height: 80,
-  },
-  filterGroup: {
-    flexDirection: "row",
-    gap: spacing.xs,
-    marginRight: spacing.sm,
-  },
   filterChip: {
     paddingHorizontal: spacing.sm + 2,
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: spacing.xs,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
     borderWidth: 1,
@@ -966,9 +994,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: spacing.md,
+    gap: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  speciesRowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    gap: spacing.md,
+  },
+  speciesThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
   },
   speciesEmojiBadge: {
     width: 44,
@@ -999,7 +1035,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   tagText: { fontSize: 10, color: colors.textMuted, fontWeight: "500" },
-  // Modal détail
   modalContainer: { flex: 1, backgroundColor: colors.bg },
   modalHeader: {
     flexDirection: "row",

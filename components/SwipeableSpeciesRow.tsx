@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Animated,
   Alert,
+  Image,
 } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { supabase } from "../lib/supabase";
@@ -16,6 +17,7 @@ type Species = {
   name: string;
   type: string;
   quantity: number;
+  image_url: string | null;
 };
 
 const categoryEmojis: Record<string, string> = {
@@ -32,34 +34,36 @@ type Props = {
   isLast: boolean;
 };
 
-export default function SwipeableSpeciesRow({ species, onDeleted, onPress, isLast }: Props) {
+export default function SwipeableSpeciesRow({
+  species,
+  onDeleted,
+  onPress,
+  isLast,
+}: Props) {
   const swipeableRef = useRef<Swipeable>(null);
+  const [imgError, setImgError] = useState(false);
 
   async function handleDelete() {
-    Alert.alert(
-      "Supprimer",
-      `Retirer ${species.name} de ce bac ?`,
-      [
-        {
-          text: "Annuler",
-          style: "cancel",
-          onPress: () => swipeableRef.current?.close(),
+    Alert.alert("Supprimer", `Retirer ${species.name} de ce bac ?`, [
+      {
+        text: "Annuler",
+        style: "cancel",
+        onPress: () => swipeableRef.current?.close(),
+      },
+      {
+        text: "Supprimer",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.from("species").delete().eq("id", species.id);
+          onDeleted();
         },
-        {
-          text: "Supprimer",
-          style: "destructive",
-          onPress: async () => {
-            await supabase.from("species").delete().eq("id", species.id);
-            onDeleted();
-          },
-        },
-      ]
-    );
+      },
+    ]);
   }
 
   function renderRightActions(
     progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
+    dragX: Animated.AnimatedInterpolation<number>,
   ) {
     const scale = dragX.interpolate({
       inputRange: [-80, 0],
@@ -91,11 +95,20 @@ export default function SwipeableSpeciesRow({ species, onDeleted, onPress, isLas
         onPress={onPress}
         activeOpacity={0.7}
       >
-        <View style={styles.emojiBadge}>
-          <Text style={{ fontSize: 22 }}>
-            {categoryEmojis[species.type] || "🐟"}
-          </Text>
-        </View>
+        {species.image_url && !imgError ? (
+          <Image
+            source={{ uri: species.image_url }}
+            style={styles.thumbnail}
+            resizeMode="cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <View style={styles.emojiBadge}>
+            <Text style={{ fontSize: 22 }}>
+              {categoryEmojis[species.type] || "🐟"}
+            </Text>
+          </View>
+        )}
         <View style={styles.info}>
           <Text style={styles.name}>{species.name}</Text>
           <Text style={styles.qty}>
@@ -119,6 +132,11 @@ const styles = StyleSheet.create({
   rowBorder: {
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  thumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
   },
   emojiBadge: {
     width: 44,

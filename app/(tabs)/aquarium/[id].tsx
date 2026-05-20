@@ -16,6 +16,7 @@ import AddParameterModal from "../../../components/AddParameterModal";
 import AddSpeciesModal from "../../../components/AddSpeciesModal";
 import SwipeableSpeciesRow from "../../../components/SwipeableSpeciesRow";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import CompatibilityCard from "../../../components/CompatibilityCard";
 
 type Aquarium = {
   id: string;
@@ -42,6 +43,7 @@ type Species = {
   name: string;
   type: "fish" | "plant" | "invertebrate";
   quantity: number;
+  image_url: string | null;
 };
 
 const typeLabels = {
@@ -89,7 +91,28 @@ export default function AquariumDetail() {
 
     if (aqRes.data) setAquarium(aqRes.data);
     if (paramRes.data) setParameters(paramRes.data);
-    if (specRes.data) setSpecies(specRes.data);
+
+    if (specRes.data && specRes.data.length > 0) {
+      const names = specRes.data.map((s) => s.name);
+      const { data: fishData } = await supabase
+        .from("fish_species")
+        .select("common_name, image_url")
+        .in("common_name", names);
+
+      const imageMap: Record<string, string | null> = {};
+      (fishData || []).forEach((f) => {
+        imageMap[f.common_name] = f.image_url;
+      });
+
+      const enriched = specRes.data.map((s) => ({
+        ...s,
+        image_url: imageMap[s.name] || null,
+      }));
+      setSpecies(enriched);
+    } else {
+      setSpecies([]);
+    }
+
     setLoading(false);
   }
 
@@ -199,6 +222,8 @@ export default function AquariumDetail() {
               </View>
             )}
           </View>
+
+          <CompatibilityCard aquariumId={id} species={species} />
 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -339,7 +364,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: spacing.xs,
   },
-  paramValue: { fontSize: fontSize.lg, fontWeight: "700", color: colors.text },
+  paramValue: {
+    fontSize: fontSize.md,
+    fontWeight: "700",
+    color: colors.text,
+    textAlign: "center",
+  },
   emptyCard: {
     backgroundColor: colors.surface,
     borderWidth: 1,
